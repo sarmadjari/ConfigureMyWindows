@@ -49,8 +49,10 @@ function AssessSMBv1 {
         "SMBv1 is enabled."
     }
     
-    $score = if ($current -eq "SMBv1 is disabled.") { 100 } else { 0 }
-    return $name, $recommended, $current, $score
+    $score = if ($smb1Status -eq 0) { 100 } else { 0 }
+    $command = if ($score -eq 100) { "" } else { "-ApplySMBv1" }
+
+    return $name, $recommended, $current, $score, $command
 }
 
 
@@ -64,8 +66,9 @@ function AssessWindowsDefenderAntivirus {
     } else {
         "$name is disabled."
     }
-    $score = if ($current -eq "$name is enabled.") { 100 } else { 0 }
-    return $name, $recommended, $current, $score
+    $score = if ($realTimeProtection -and $realTimeProtection.RealTimeMonitoringEnabled) { 100 } else { 0 }
+    $command = if ($realTimeProtection -and $realTimeProtection.RealTimeMonitoringEnabled) { "" } else { "-ApplyWindowsDefenderAntivirus" }
+    return $name, $recommended, $current, $score, $command
 }
 
 # Function to check if Windows Defender Firewall is enabled
@@ -78,8 +81,9 @@ function AssessWindowsDefenderFirewall {
     } else {
         "$name is disabled."
     }
-    $score = if ($current -eq "$name is enabled.") { 100 } else { 0 }
-    return $name, $recommended, $current, $score
+    $score = if ($firewallStatus) { 100 } else { 0 }
+    $command = if ($score -eq 100) { "" } else { "-ApplyWindowsDefenderFirewall" }
+    return $name, $recommended, $current, $score, $command
 }
 
 # Function to check if Remote Desktop Protocol (RDP) is disabled
@@ -92,8 +96,9 @@ function AssessRemoteDesktopProtocol {
     } else {
         "$name is enabled."
     }
-    $score = if ($current -eq "$name is disabled.") { 100 } else { 0 }
-    return $name, $recommended, $current, $score
+    $score = if ($rdpStatus -and $rdpStatus.fDenyTSConnections -eq 1) { 100 } else { 0 }
+    $command = if ($rdpStatus -and $rdpStatus.fDenyTSConnections -eq 1) { "" } else { "-ApplyRemoteDesktopProtocol" }
+    return $name, $recommended, $current, $score, $command
 }
 
 # Function to check if User Account Control (UAC) is enabled with recommended settings
@@ -110,8 +115,9 @@ function AssessUserAccountControl {
     } else {
         "$name is not enabled with the highest security settings."
     }
-    $score = if ($current -eq "$name is enabled with the highest security settings.") { 100 } else { 0 }
-    return $name, $recommended, $current, $score
+    $score = if ($enableLUA -and $consentPromptBehaviorAdmin -and $promptOnSecureDesktop) { 100 } else { 0 }
+    $command = if ($enableLUA -and $consentPromptBehaviorAdmin -and $promptOnSecureDesktop) { "" } else { "-ApplyUserAccountControl" }
+    return $name, $recommended, $current, $score, $command
 }
 
 # Function to check if the Audit policies are configured to log both success and failure events.
@@ -124,8 +130,9 @@ function AssessAuditPolicy {
     } else {
         "$name does not log both."
     }
-    $score = if ($current -eq "$name logs both success and failure.") { 100 } else { 0 }
-    return $name, $recommended, $current, $score
+    $score = if ($auditPolicy -eq 1) { 100 } else { 0 }
+    $command = if ($score -eq 100) { "" } else { "-ApplyAuditPolicy" }
+    return $name, $recommended, $current, $score, $command
 }
  
 # Function to check Windows Update settings
@@ -176,11 +183,10 @@ function AssessWindowsUpdateSettings {
         $score = 0
     }
 
-    return $name, $recommended, $current, $score
+    $command = if ($score -eq 100) { "" } else { "-ApplyWindowsUpdateSettings" }
+
+    return $name, $recommended, $current, $score, $command
 }
-
-
-
 
 
 # Function to check if Windows Defender SmartScreen is enabled
@@ -216,7 +222,9 @@ function AssessWindowsDefenderSmartScreen {
         $score = 0
     }
 
-    return $name, $recommended, $current, $score
+    $command = if ($score -eq 100) { "" } else { "-ApplyWindowsDefenderSmartScreen" }
+
+    return $name, $recommended, $current, $score, $command
 }
 
 
@@ -239,8 +247,10 @@ function AssessWindowsDefenderExploitGuard {
         $current = "Error retrieving Exploit Guard settings: $_"
     }
     
-    $score = if ($current -eq "Exploit Guard is enabled.") { 100 } else { 0 }
-    return $name, $recommended, $current, $score
+    $score = if ($asrRulesEnabled -contains 1) { 100 } else { 0 }
+    $command = if ($score -eq 100) { "" } else { "-ApplyWindowsDefenderExploitGuard" }
+
+    return $name, $recommended, $current, $score, $command
 }
 
 
@@ -250,14 +260,16 @@ function AssessFirewallConfiguration {
     $name = "Firewall Configuration"
     $recommended = "$name should be enabled for all profiles."
     $firewallStatus = Get-NetFirewallProfile
-    $allEnabled = $firewallStatus | ForEach-Object { $_.Enabled } | Where-Object { $_ -eq $false }
+    $allEnabled = -not ($firewallStatus | ForEach-Object { $_.Enabled } | Where-Object { $_ -eq $false })
     $current = if ($allEnabled) {
-        "$name is not fully enabled."
-    } else {
         "$name is fully enabled."
+    } else {
+        "$name is not fully enabled."
     }
-    $score = if ($current -eq "$name is fully enabled.") { 100 } else { 0 }
-    return $name, $recommended, $current, $score
+    $score = if ($allEnabled) { 100 } else { 0 }
+    $command = if ($score -eq 100) { "" } else { "-ApplyFirewallConfiguration" }
+
+    return $name, $recommended, $current, $score, $command
 }
 
 
@@ -279,8 +291,10 @@ function AssessAutoRun {
         $current = "Error retrieving AutoRun settings: $_"
     }
 
-    $score = if ($current -eq "AutoRun is disabled.") { 100 } else { 0 }
-    return $name, $recommended, $current, $score
+    $score = if ($autoRunStatus -eq 0xff) { 100 } else { 0 }
+    $command = if ($score -eq 100) { "" } else { "-ApplyAutoRun" }
+
+    return $name, $recommended, $current, $score, $command
 }
 
 
@@ -302,14 +316,18 @@ function AssessPageFileClearance {
         $current = "Error retrieving Pagefile clearance settings: $_"
     }
 
-    $score = if ($current -eq "Pagefile clearance at shutdown is enabled.") { 100 } else { 0 }
-    return $name, $recommended, $current, $score
+    $score = if ($pageFileClearanceStatus -eq 1) { 100 } else { 0 }
+    $command = $command = if ($score -eq 100) { "" } else { "-ApplyPageFileClearance" }
+
+    return $name, $recommended, $current, $score, $command
 }
 
 
 function AssessWindowsScriptHost {
     $name = "Windows Script Host (WSH)"
     $recommended = "$name should be disabled."
+
+    $score = 0 # Default score if WSH is not disabled
 
     try {
         # Using CheckRegistryPath to check WSH settings in HKLM and HKCU
@@ -326,13 +344,15 @@ function AssessWindowsScriptHost {
             $current = "Windows Script Host is enabled at the user level."
         } else {
             $current = "Windows Script Host is disabled."
+            $score = 100 # Score 100 if WSH is disabled
         }
     } catch {
         $current = "Error retrieving Windows Script Host settings: $_"
     }
 
-    $score = if ($current -eq "Windows Script Host is disabled.") { 100 } else { 0 }
-    return $name, $recommended, $current, $score
+    $command = if ($score -eq 100) { "" } else { "-ApplyWindowsScriptHost" }
+
+    return $name, $recommended, $current, $score, $command
 }
 
 
@@ -363,7 +383,9 @@ function AssessPasswordPolicy {
         $score = 0
     }
 
-    return $name, $recommended, $current, $score
+    $command = if ($score -eq 100) { "" } else { "-ApplyPasswordPolicy" }
+
+    return $name, $recommended, $current, $score, $command
 }
 
 
@@ -379,7 +401,9 @@ function AssessGuestAccount {
         "$name is disabled."
     }
     $score = if ($current -eq "$name is disabled.") { 100 } else { 0 }
-    return $name, $recommended, $current, $score
+    $command = if ($score -eq 100) { "" } else { "-ApplyGuestAccount" }
+
+    return $name, $recommended, $current, $score, $command
 }
 
 # Array to store assessment functions
@@ -414,8 +438,11 @@ foreach ($functionName in $assessmentFunctions) {
 Write-Output "==================================================================================="
 Write-Output "Security Configuration Assessment Report based on CIS Benchmark for Windows 11:"
 
+
+$commandline = ""
+# Loop through the assessment results and output the details
 foreach ($result in $assessmentResults) {
-    $name, $recommended, $current, $score = $result
+    $name, $recommended, $current, $score, $command = $result
     Write-Output "-----------------------------------------------------------------------------------"
     Write-Output "Checking $name ..."
     Write-Output " - Recomended: $recommended"
@@ -425,7 +452,12 @@ foreach ($result in $assessmentResults) {
     } else {
         Write-Output " - Current: $current`n"
     }
+
+    $commandline += " " + $command
 }
+
+# Remove extra spaces from the commandline
+$commandline = $commandline -replace '\s+', ' '
 
 # Calculate the overall compliance score if there are assessment results
 $count = 0
@@ -438,5 +470,8 @@ if ($assessmentResults.Count -gt 0) {
     # Output the overall compliance score
     Write-Output "-----------------------------------------------------------------------------------"
     Write-Output "Overall Compliance Score for the $count assesments is: $percentageScore%"
+    Write-Output "-----------------------------------------------------------------------------------"
+    Write-Output "To mediate the non-compliant settings, run the following command as an Adminstrator:"
+    Write-Output ".\AssesMyWindows11Security.ps1 $commandline"
     Write-Output "===================================================================================`n"
 }

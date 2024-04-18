@@ -116,8 +116,11 @@ function Set-RemoteDesktopProtocol {
 # This function configures User Account Control to the highest security settings.
 function Set-UserAccountControl {
     Try {
+        # Set UAC to highest security settings
         Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "EnableLUA" -Value 1 -ErrorAction Stop
+        # The user will be prompted for consent on secure desktop when an operation requires administrative privileges.
         Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "ConsentPromptBehaviorAdmin" -Value 2 -ErrorAction Stop
+        # The user will be prompted for credentials on the secure desktop when an operation requires administrative privileges.
         Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "PromptOnSecureDesktop" -Value 1 -ErrorAction Stop
         Write-Host "User Account Control has been configured to highest security settings."
     } Catch {
@@ -139,7 +142,9 @@ function Set-AuditPolicy {
 # This function configures Windows Update Settings for automatic updates.
 function Set-WindowsUpdateSettings {
     Try {
+        # Set Windows Update to automatically download and install updates
         Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" -Name "NoAutoUpdate" -Value 0 -ErrorAction Stop
+        # Set Windows Update to download updates and notify for installation.
         Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" -Name "AUOptions" -Value 4 -ErrorAction Stop
         Write-Host "Windows Update Settings have been configured for automatic updates."
     } Catch {
@@ -202,6 +207,7 @@ function Set-PageFileClearance {
 # This function disables Windows Script Host to prevent running potentially harmful scripts.
 function Set-WindowsScriptHost {
     Try {
+        # Disable Windows Script Host for users.
         Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows Script Host\Settings" -Name "Enabled" -Value 0 -ErrorAction Stop
         Write-Host "Windows Script Host has been disabled."
     } Catch {
