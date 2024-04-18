@@ -1,7 +1,5 @@
 The PowerShell script `AssesMyWindows11Security.ps1` has several important security checks aligned with CIS Benchmark recommendations for Windows 11:
 
-The PowerShell script `AssesMyWindows11Security.ps1` has several important security checks aligned with CIS Benchmark recommendations for Windows 11:
-
 ### 1. **AssessSMBv1**
    - **Checks**: Whether SMBv1 is disabled.
    - **CIS Recommendation**: SMBv1 should be disabled due to security vulnerabilities.
@@ -100,8 +98,3 @@ The script includes a comprehensive section that generates a security configurat
 - The script primarily targets Level 1 (L1) recommendations, focusing on settings that offer significant security improvements without extensive modifications to system functionality.
 
 
-### Compliance and Security Assessment Reporting:
-The script includes a comprehensive section that generates a security configuration assessment report. This report details each check's current state, recommended state, and a compliance score. It also calculates an overall compliance score based on the results of the individual assessments.
-
-### Overall Compliance Level:
-- The script primarily targets Level 1 (L1) recommendations, focusing on settings that offer significant security improvements without extensive modifications to system functionality.
